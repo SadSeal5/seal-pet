@@ -4,6 +4,15 @@ Windows masaüstünde yaşayan, pixel art bir fok. Şeffaf pencere, click-throug
 
 ![Fok masaüstünde](docs/screenshot.png)
 
+## İndirme
+
+Hazır sürüm: **[Fok 0.2.0](https://github.com/SadSeal5/seal-pet/releases/latest)**
+
+- `Fok Setup 0.2.0.exe` — NSIS installer (masaüstü + başlangıç menüsü kısayolu)
+- `Fok 0.2.0.exe` — portable, kurulum gerektirmez
+
+İmzasız olduğu için SmartScreen "bilinmeyen yayıncı" uyarısı verebilir: **Daha fazla bilgi → Yine de çalıştır**.
+
 ## Çalıştırma
 
 ```bash
