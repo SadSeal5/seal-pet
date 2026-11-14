@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' app:; img-src 'self' app: data:; style-src 'self' 'unsafe-inline'" />
+    <link rel="stylesheet" href="./style.css" />
+    <title>Fok</title>
+  </head>
+  <body>
+    <canvas id="stage"></canvas>
+
+    <div id="menu" class="pixel-panel hidden"></div>
+
+    <div id="stats" class="pixel-panel hidden">
+      <div class="panel-title"><span id="stats-name">Buz</span> <em id="stats-level">Sv.1</em></div>
+      <div class="stat"><span>Tokluk</span><div class="bar"><i id="bar-hunger"></i></div></div>
+      <div class="stat"><span>Mutluluk</span><div class="bar"><i id="bar-happiness"></i></div></div>
+      <div class="stat"><span>Enerji</span><div class="bar"><i id="bar-energy"></i></div></div>
+      <div class="stat"><span>Temizlik</span><div class="bar"><i id="bar-clean"></i></div></div>
+      <div class="stat"><span>Sevgi</span><div class="bar"><i id="bar-love"></i></div></div>
+      <div class="hint">Sağ tık: menü · Sürükle: taşı</div>
+    </div>
+
+    <div id="settings" class="pixel-panel hidden">
+      <div class="panel-title">Ayarlar</div>
+      <label class="row">Boyut <input id="set-scale" type="range" min="2" max="5" step="1" /></label>
+      <label class="row"><input id="set-top" type="checkbox" /> Hep üstte</label>
+      <label class="row"><input id="set-sound" type="checkbox" /> Ses</label>
+      <label class="row"><input id="set-follow" type="checkbox" /> Fareyi takip et</label>
+      <button id="set-close" class="btn">Kapat</button>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

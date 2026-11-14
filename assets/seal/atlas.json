@@ -1,0 +1,186 @@
+{
+  "idle": {
+    "file": "idle.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 4,
+    "fps": 4,
+    "loop": true
+  },
+  "blink": {
+    "file": "blink.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 4,
+    "fps": 12,
+    "loop": false
+  },
+  "look_right": {
+    "file": "look_right.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 2,
+    "fps": 6,
+    "loop": false
+  },
+  "look_left": {
+    "file": "look_left.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 2,
+    "fps": 6,
+    "loop": false
+  },
+  "slide": {
+    "file": "slide.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 6,
+    "fps": 10,
+    "loop": true
+  },
+  "jump": {
+    "file": "jump.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 4,
+    "fps": 12,
+    "loop": false
+  },
+  "fall": {
+    "file": "fall.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 3,
+    "fps": 8,
+    "loop": true
+  },
+  "land": {
+    "file": "land.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 3,
+    "fps": 14,
+    "loop": false
+  },
+  "sleep": {
+    "file": "sleep.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 4,
+    "fps": 3,
+    "loop": true
+  },
+  "wake": {
+    "file": "wake.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 3,
+    "fps": 8,
+    "loop": false
+  },
+  "yawn": {
+    "file": "yawn.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 5,
+    "fps": 8,
+    "loop": false
+  },
+  "happy": {
+    "file": "happy.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 6,
+    "fps": 12,
+    "loop": false
+  },
+  "hearts": {
+    "file": "hearts.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 5,
+    "fps": 10,
+    "loop": false
+  },
+  "sad": {
+    "file": "sad.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 3,
+    "fps": 4,
+    "loop": true
+  },
+  "annoyed": {
+    "file": "annoyed.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 3,
+    "fps": 8,
+    "loop": false
+  },
+  "eat": {
+    "file": "eat.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 6,
+    "fps": 10,
+    "loop": false
+  },
+  "dangle": {
+    "file": "dangle.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 2,
+    "fps": 6,
+    "loop": true
+  },
+  "dizzy": {
+    "file": "dizzy.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 4,
+    "fps": 8,
+    "loop": false
+  },
+  "spin": {
+    "file": "spin.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 6,
+    "fps": 14,
+    "loop": false
+  },
+  "clap": {
+    "file": "clap.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 4,
+    "fps": 12,
+    "loop": false
+  },
+  "balance_ball": {
+    "file": "balance_ball.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 4,
+    "fps": 8,
+    "loop": true
+  },
+  "bubble": {
+    "file": "bubble.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 6,
+    "fps": 10,
+    "loop": false
+  },
+  "celebrate": {
+    "file": "celebrate.png",
+    "frameW": 48,
+    "frameH": 48,
+    "frames": 8,
+    "fps": 12,
+    "loop": false
+  }
+}

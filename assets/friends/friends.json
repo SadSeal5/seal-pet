@@ -1,0 +1,82 @@
+{
+  "penguin_idle": {
+    "file": "penguin_idle.png",
+    "frameW": 32,
+    "frameH": 32,
+    "frames": 2,
+    "fps": 3,
+    "loop": true
+  },
+  "penguin_walk": {
+    "file": "penguin_walk.png",
+    "frameW": 32,
+    "frameH": 32,
+    "frames": 4,
+    "fps": 9,
+    "loop": true
+  },
+  "otter_idle": {
+    "file": "otter_idle.png",
+    "frameW": 32,
+    "frameH": 32,
+    "frames": 2,
+    "fps": 3,
+    "loop": true
+  },
+  "otter_walk": {
+    "file": "otter_walk.png",
+    "frameW": 32,
+    "frameH": 32,
+    "frames": 4,
+    "fps": 9,
+    "loop": true
+  },
+  "seagull_idle": {
+    "file": "seagull_idle.png",
+    "frameW": 32,
+    "frameH": 32,
+    "frames": 2,
+    "fps": 3,
+    "loop": true
+  },
+  "seagull_walk": {
+    "file": "seagull_walk.png",
+    "frameW": 32,
+    "frameH": 32,
+    "frames": 4,
+    "fps": 9,
+    "loop": true
+  },
+  "crab_idle": {
+    "file": "crab_idle.png",
+    "frameW": 32,
+    "frameH": 32,
+    "frames": 2,
+    "fps": 3,
+    "loop": true
+  },
+  "crab_walk": {
+    "file": "crab_walk.png",
+    "frameW": 32,
+    "frameH": 32,
+    "frames": 4,
+    "fps": 9,
+    "loop": true
+  },
+  "fish_idle": {
+    "file": "fish_idle.png",
+    "frameW": 32,
+    "frameH": 32,
+    "frames": 2,
+    "fps": 3,
+    "loop": true
+  },
+  "fish_walk": {
+    "file": "fish_walk.png",
+    "frameW": 32,
+    "frameH": 32,
+    "frames": 4,
+    "fps": 9,
+    "loop": true
+  }
+}

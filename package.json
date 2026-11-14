@@ -1,0 +1,16 @@
+{
+  "name": "seal-pet",
+  "version": "0.1.0",
+  "description": "Pixel art masaüstü fok pet",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "gen": "python tools/gen_sprites.py",
+    "preview": "python tools/preview.py"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^45.3.2"
+  }
+}
