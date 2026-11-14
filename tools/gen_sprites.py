@@ -660,20 +660,11 @@ def main():
         hz.alpha_composite(fr.resize((cw * 16, chh * 16), Image.NEAREST), (i * cw * 16, 0))
     hz.save(os.path.join(ROOT, "tools", "head.png"))
 
-    # uygulama + tray ikonu
-    frame = draw_seal(CLIPS["idle"][0]()[0])
-    crop = frame.crop(frame.getbbox())
-    icon = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
-    sc = min(232 / crop.width, 232 / crop.height)
-    nw, nh = int(crop.width * sc), int(crop.height * sc)
-    icon.alpha_composite(crop.resize((nw, nh), Image.NEAREST), ((256 - nw) // 2, (256 - nh) // 2))
-    icon.save(os.path.join(ASSETS, "icon.png"))
+    # uygulama + tray ikonu (keskin çok boyutlu ICO)
+    from gen_icon import build_icons
 
-    tray = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
-    sc = min(30 / crop.width, 30 / crop.height)
-    nw, nh = int(crop.width * sc), int(crop.height * sc)
-    tray.alpha_composite(crop.resize((nw, nh), Image.LANCZOS), ((32 - nw) // 2, (32 - nh) // 2))
-    tray.save(os.path.join(ASSETS, "tray.png"))
+    frame = draw_seal(CLIPS["idle"][0]()[0])
+    build_icons(frame, ASSETS)
 
     print(f"{len(CLIPS)} klip üretildi -> {seal_dir}")
 
