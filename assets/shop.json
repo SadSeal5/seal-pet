@@ -1,0 +1,100 @@
+{
+  "accessories": [
+    {
+      "id": "party_hat",
+      "name": "Parti şapkası",
+      "price": 15,
+      "slot": "head"
+    },
+    {
+      "id": "crown",
+      "name": "Taç",
+      "price": 60,
+      "slot": "head"
+    },
+    {
+      "id": "santa",
+      "name": "Noel şapkası",
+      "price": 40,
+      "slot": "head"
+    },
+    {
+      "id": "headphones",
+      "name": "Kulaklık",
+      "price": 35,
+      "slot": "head"
+    },
+    {
+      "id": "sunglasses",
+      "name": "Güneş gözlüğü",
+      "price": 25,
+      "slot": "face"
+    },
+    {
+      "id": "eyepatch",
+      "name": "Göz bandı",
+      "price": 20,
+      "slot": "face"
+    },
+    {
+      "id": "scarf",
+      "name": "Atkı",
+      "price": 18,
+      "slot": "neck"
+    },
+    {
+      "id": "bowtie",
+      "name": "Papyon",
+      "price": 22,
+      "slot": "neck"
+    },
+    {
+      "id": "backpack",
+      "name": "Sırt çantası",
+      "price": 45,
+      "slot": "back"
+    }
+  ],
+  "decor": [
+    {
+      "id": "ice_block",
+      "name": "Buz kütlesi",
+      "price": 20
+    },
+    {
+      "id": "seaweed",
+      "name": "Yosun",
+      "price": 10
+    },
+    {
+      "id": "starfish",
+      "name": "Denizyıldızı",
+      "price": 12
+    },
+    {
+      "id": "bunting",
+      "name": "Parti flaması",
+      "price": 25
+    },
+    {
+      "id": "snow_pile",
+      "name": "Kar yığını",
+      "price": 10
+    },
+    {
+      "id": "shell",
+      "name": "Deniz kabuğu",
+      "price": 12
+    },
+    {
+      "id": "icicle",
+      "name": "Buz saçağı",
+      "price": 14
+    },
+    {
+      "id": "name_sign",
+      "name": "İsim tabelası",
+      "price": 30
+    }
+  ]
+}

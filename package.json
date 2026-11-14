@@ -1,16 +1,56 @@
 {
   "name": "seal-pet",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Pixel art masaüstü fok pet",
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
     "gen": "python tools/gen_sprites.py",
-    "preview": "python tools/preview.py"
+    "gen:friends": "python tools/gen_friends.py",
+    "gen:shop": "python tools/gen_shop.py",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win"
   },
-  "author": "",
+  "author": "Sad_Seal",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^45.3.2"
+    "electron": "^45.3.2",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.sadseal.sealpet",
+    "productName": "Fok",
+    "copyright": "Copyright © 2026 Sad_Seal",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Fok"
+    }
   }
 }

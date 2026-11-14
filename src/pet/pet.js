@@ -31,6 +31,13 @@ export class Pet {
     this.xp = 0
     this.name = 'Buz'
 
+    // ekonomi + dolap
+    this.coins = 30
+    this.owned = []
+    this.equipped = {}
+    this.decor = []
+    this.accessoryImages = {}
+
     this.play('idle', { force: true })
   }
 
@@ -169,6 +176,7 @@ export class Pet {
     this.needs.happiness = Math.min(100, this.needs.happiness + 9)
     this.needs.love = Math.min(100, this.needs.love + 3)
     this.addXp(2)
+    this.addCoins(1)
     this.play('hearts', { once: true })
     this.sfx.happy()
   }
@@ -179,6 +187,7 @@ export class Pet {
     this.needs.happiness = Math.min(100, this.needs.happiness + 4)
     this.needs.love = Math.min(100, this.needs.love + 1)
     this.addXp(3)
+    this.addCoins(2)
     this.play('eat', { once: true })
     this.sfx.eat()
   }
@@ -205,6 +214,40 @@ export class Pet {
 
   addXp(n) {
     this.xp += n
+  }
+
+  // ------------------------------------------------------------- ekonomi
+  addCoins(n) {
+    this.coins = Math.max(0, this.coins + n)
+  }
+
+  owns(id) {
+    return this.owned.includes(id)
+  }
+
+  buy(id, price) {
+    if (this.owns(id) || this.coins < price) return false
+    this.coins -= price
+    this.owned.push(id)
+    this.sfx.happy()
+    return true
+  }
+
+  /** Aksesuarı takar; zaten takılıysa çıkarır. Takılıysa true döner. */
+  toggleEquip(id, slot) {
+    if (!this.owns(id)) return false
+    if (this.equipped[slot] === id) {
+      delete this.equipped[slot]
+      this.sfx.blip()
+      return false
+    }
+    this.equipped[slot] = id
+    this.sfx.blip()
+    return true
+  }
+
+  setAccessoryImages(map) {
+    this.accessoryImages = map
   }
 
   // ------------------------------------------------------------- sürükleme
@@ -234,7 +277,37 @@ export class Pet {
 
   // ------------------------------------------------------------- çizim
   draw(ctx) {
-    this.anim.draw(ctx, this.x, this.y, this.scale, this.facing < 0)
+    const flip = this.facing < 0
+    this.anim.draw(ctx, this.x, this.y, this.scale, flip)
+    this.drawAccessories(ctx, flip)
+  }
+
+  /** Aksesuar PNG'leri fok karesiyle aynı 48×48 ızgarada üretildi. */
+  drawAccessories(ctx, flip) {
+    const ids = Object.values(this.equipped)
+    if (!ids.length) return
+
+    const s = this.scale
+    const fx = Math.round(this.x)
+    const fy = Math.round(this.y)
+    const size = SPRITE * s
+
+    ctx.imageSmoothingEnabled = false
+    if (flip) {
+      ctx.save()
+      ctx.translate(fx + size, fy)
+      ctx.scale(-1, 1)
+      for (const id of ids) {
+        const img = this.accessoryImages[id]
+        if (img) ctx.drawImage(img, 0, 0, SPRITE, SPRITE, 0, 0, size, size)
+      }
+      ctx.restore()
+    } else {
+      for (const id of ids) {
+        const img = this.accessoryImages[id]
+        if (img) ctx.drawImage(img, 0, 0, SPRITE, SPRITE, fx, fy, size, size)
+      }
+    }
   }
 
   hitTest(px, py) {
@@ -252,6 +325,10 @@ export class Pet {
       xp: this.xp,
       scale: this.scale,
       x: Math.round(this.x),
+      coins: Math.round(this.coins),
+      owned: [...this.owned],
+      equipped: { ...this.equipped },
+      decor: this.decor.map((d) => ({ id: d.id, x: Math.round(d.x) })),
       lastSeen: Date.now(),
     }
   }
@@ -267,6 +344,19 @@ export class Pet {
     if (typeof data.xp === 'number') this.xp = data.xp
     if (typeof data.scale === 'number') this.scale = clamp(data.scale, 2, 5)
     if (typeof data.x === 'number') this.x = data.x
+    if (typeof data.coins === 'number') this.coins = Math.max(0, data.coins)
+    if (Array.isArray(data.owned)) this.owned = data.owned.filter((v) => typeof v === 'string')
+    if (data.equipped && typeof data.equipped === 'object') {
+      this.equipped = {}
+      for (const [slot, id] of Object.entries(data.equipped)) {
+        if (typeof id === 'string' && this.owns(id)) this.equipped[slot] = id
+      }
+    }
+    if (Array.isArray(data.decor)) {
+      this.decor = data.decor
+        .filter((d) => d && typeof d.id === 'string')
+        .map((d) => ({ id: d.id, x: Number(d.x) || 0 }))
+    }
 
     // çevrimdışı geçen süre için hafif azalma (en fazla 1 saat)
     const elapsed = clamp((Date.now() - (data.lastSeen || Date.now())) / 1000, 0, 3600)

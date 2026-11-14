@@ -5,6 +5,10 @@ const MENU_ITEMS = [
   { id: 'friend', label: '🐧  Arkadaş çağır' },
   { id: 'sleep', label: '😴  Uyut' },
   { sep: true },
+  { id: 'shop', label: '🛍  Mağaza' },
+  { id: 'game_fish', label: '🐟  Balık yakala' },
+  { id: 'game_bubble', label: '🫧  Köpük patlat' },
+  { sep: true },
   { id: 'stats', label: '📊  Durum' },
   { id: 'settings', label: '⚙️  Ayarlar' },
   { sep: true },
@@ -12,17 +16,33 @@ const MENU_ITEMS = [
   { id: 'quit', label: '✖  Çıkış' },
 ]
 
+const SLOT_LABEL = {
+  head: 'Kafa',
+  face: 'Yüz',
+  neck: 'Boyun',
+  back: 'Sırt',
+}
+
 export class UI {
-  constructor({ onAction, onSetting }) {
+  constructor({ onAction, onSetting, onShop }) {
     this.menuEl = document.getElementById('menu')
     this.statsEl = document.getElementById('stats')
     this.settingsEl = document.getElementById('settings')
+    this.shopEl = document.getElementById('shop')
+    this.shopBody = document.getElementById('shop-body')
+    this.shopCoins = document.getElementById('shop-coins')
+    this.toastEl = document.getElementById('toast')
+
     this.onAction = onAction
     this.onSetting = onSetting
+    this.onShop = onShop
     this.menuOpen = false
     this.statsTimer = null
+    this.toastTimer = null
+    this.shopState = null
 
     this.bindSettings()
+    document.getElementById('shop-close').addEventListener('click', () => this.hideShop())
   }
 
   // ------------------------------------------------------------- menü
@@ -99,6 +119,123 @@ export class UI {
     this.statsEl.classList.add('hidden')
   }
 
+  // ------------------------------------------------------------- mağaza
+  showShop(state) {
+    this.shopState = state
+    this.renderShop()
+
+    this.shopEl.style.left = '-9999px'
+    this.shopEl.style.top = '-9999px'
+    this.shopEl.classList.remove('hidden')
+
+    const rect = this.shopEl.getBoundingClientRect()
+    const px = Math.max(8, (window.innerWidth - rect.width) / 2)
+    const py = Math.max(8, (window.innerHeight - rect.height) / 2)
+    this.shopEl.style.left = px + 'px'
+    this.shopEl.style.top = py + 'px'
+  }
+
+  hideShop() {
+    this.shopEl.classList.add('hidden')
+    this.shopState = null
+  }
+
+  refreshShop() {
+    if (this.shopState) this.renderShop()
+  }
+
+  renderShop() {
+    const st = this.shopState
+    if (!st) return
+
+    this.shopCoins.textContent = st.coins + ' 🐟'
+    this.shopBody.innerHTML = ''
+
+    const section = (title) => {
+      const h = document.createElement('div')
+      h.className = 'shop-sec'
+      h.textContent = title
+      this.shopBody.appendChild(h)
+    }
+
+    const row = ({ id, name, sub, price, img, owned, active, action, disabled }) => {
+      const el = document.createElement('div')
+      el.className = 'shop-row'
+
+      const icon = document.createElement('img')
+      icon.src = img
+      icon.alt = name
+      icon.draggable = false
+      el.appendChild(icon)
+
+      const label = document.createElement('div')
+      label.className = 'name'
+      label.textContent = name
+      if (sub) {
+        const small = document.createElement('small')
+        small.textContent = sub
+        label.appendChild(small)
+      }
+      el.appendChild(label)
+
+      const btn = document.createElement('button')
+      btn.className = 'buy' + (active ? ' on' : owned ? ' owned' : '')
+      btn.textContent = action
+      btn.disabled = !!disabled
+      btn.addEventListener('click', (ev) => {
+        ev.stopPropagation()
+        this.onShop(kindOf(id), id)
+      })
+      el.appendChild(btn)
+
+      this.shopBody.appendChild(el)
+    }
+
+    const accById = new Map(st.accessories.map((a) => [a.id, a]))
+    const decById = new Map(st.decor.map((d) => [d.id, d]))
+    const kindOf = (id) => (accById.has(id) ? 'accessory' : 'decor')
+
+    section('Aksesuarlar')
+    for (const a of st.accessories) {
+      const owned = st.owned.includes(a.id)
+      const equipped = st.equipped[a.slot] === a.id
+      row({
+        id: a.id,
+        name: a.name,
+        sub: SLOT_LABEL[a.slot] || a.slot,
+        img: '/assets/accessories/' + a.id + '.png',
+        owned,
+        active: equipped,
+        action: owned ? (equipped ? 'Çıkar' : 'Tak') : a.price + ' 🐟',
+        disabled: !owned && st.coins < a.price,
+      })
+    }
+
+    section('Süsler')
+    for (const d of st.decor) {
+      const owned = st.owned.includes(d.id)
+      const placed = st.placed.includes(d.id)
+      row({
+        id: d.id,
+        name: d.name,
+        sub: placed ? 'Masaüstünde' : owned ? 'Dolapta' : 'Satın alınmadı',
+        img: '/assets/decor/' + d.id + '.png',
+        owned,
+        active: placed,
+        action: owned ? (placed ? 'Kaldır' : 'Koy') : d.price + ' 🐟',
+        disabled: !owned && st.coins < d.price,
+      })
+    }
+  }
+
+  // ------------------------------------------------------------- toast
+  toast(text, ms = 2600) {
+    this.toastEl.textContent = text
+    this.toastEl.classList.remove('hidden')
+    clearTimeout(this.toastTimer)
+    this.toastTimer = setTimeout(() => this.toastEl.classList.add('hidden'), ms)
+  }
+
   // ------------------------------------------------------------- ayarlar
   bindSettings() {
     this.scaleEl = document.getElementById('set-scale')
@@ -138,7 +275,7 @@ export class UI {
 
   // ------------------------------------------------------------- hit test
   contains(x, y) {
-    for (const el of [this.menuEl, this.statsEl, this.settingsEl]) {
+    for (const el of [this.menuEl, this.statsEl, this.settingsEl, this.shopEl]) {
       if (el.classList.contains('hidden')) continue
       const r = el.getBoundingClientRect()
       if (x >= r.left - 4 && x <= r.right + 4 && y >= r.top - 4 && y <= r.bottom + 4) return true

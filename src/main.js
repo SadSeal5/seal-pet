@@ -4,6 +4,8 @@ import { Pet } from './pet/pet.js'
 import { AI } from './pet/ai.js'
 import { Toy } from './world/toys.js'
 import { Friends } from './world/friends.js'
+import { DecorManager } from './world/decor.js'
+import { MiniGame } from './world/minigame.js'
 import { UI } from './ui/ui.js'
 
 const api = window.petAPI
@@ -33,6 +35,9 @@ let pet = null
 let ai = null
 let ui = null
 let friends = null
+let decor = null
+let game = null
+let shop = null
 let drag = null
 let interactive = false
 let saveTimer = 0
@@ -143,11 +148,13 @@ function drawShadow() {
 
 function render() {
   ctx.clearRect(0, 0, W, H)
+  if (decor) decor.draw(ctx, W, H)
   drawShadow()
   if (friends) friends.draw(ctx)
   if (world.ball) world.ball.draw(ctx)
   if (world.fish) world.fish.draw(ctx)
   pet.draw(ctx)
+  if (game) game.draw(ctx, W, H)
 }
 
 // ---------------------------------------------------------------- giriş
@@ -155,11 +162,16 @@ function overPet(x, y) {
   if (pet.hitTest(x, y)) return true
   if (world.ball && world.ball.hitTest(x, y)) return true
   if (world.fish && world.fish.hitTest(x, y)) return true
+  if (decor && decor.hitTest(x, y, H)) return true
   return false
 }
 
 function updateInteractive() {
-  const on = !!drag || (ui && ui.contains(mouse.x, mouse.y)) || overPet(mouse.x, mouse.y)
+  const on =
+    !!drag ||
+    (game && game.active) ||
+    (ui && ui.contains(mouse.x, mouse.y)) ||
+    overPet(mouse.x, mouse.y)
   if (on !== interactive) {
     interactive = on
     api.setInteractive(on)
@@ -175,6 +187,8 @@ function applyMouse(x, y) {
     if (drag.kind === 'pet') {
       pet.dragTo(x, y, W, H)
       if (Math.hypot(x - drag.startX, y - drag.startY) > 6) drag.moved = true
+    } else if (drag.kind === 'decor') {
+      drag.item.x = Math.max(0, Math.min(W - drag.item.w, x - drag.dx))
     } else {
       drag.toy.x = x - drag.dx
       drag.toy.y = y - drag.dy
@@ -199,7 +213,24 @@ function onDown(e) {
 
   if (ui && ui.contains(x, y)) return
 
+  if (game && game.active) {
+    game.click(x, y)
+    return
+  }
+
   if (ui) ui.hideMenu()
+
+  const deco = decor && decor.hitTest(x, y, H)
+  if (deco) {
+    deco.dragging = true
+    drag = {
+      kind: 'decor',
+      item: deco,
+      dx: x - deco.x,
+      samples: [{ t: performance.now(), x, y }],
+    }
+    return
+  }
 
   if (world.fish && world.fish.hitTest(x, y)) {
     const f = world.fish
@@ -242,6 +273,9 @@ function onUp() {
     } else {
       pet.endDrag(v.x, v.y)
     }
+  } else if (drag.kind === 'decor') {
+    drag.item.dragging = false
+    save()
   } else {
     const t = drag.toy
     t.dragging = false
@@ -279,6 +313,15 @@ function runCommand(cmd) {
       if (pet.sleeping) pet.wake()
       else pet.sleep()
       break
+    case 'shop':
+      ui.showShop(shopState())
+      break
+    case 'game_fish':
+      startGame('fish')
+      break
+    case 'game_bubble':
+      startGame('bubble')
+      break
     case 'stats':
       ui.showStats(pet)
       break
@@ -286,6 +329,73 @@ function runCommand(cmd) {
       ui.showSettings()
       break
   }
+}
+
+// ---------------------------------------------------------------- mağaza
+function shopState() {
+  return {
+    coins: Math.round(pet.coins),
+    owned: [...pet.owned],
+    equipped: { ...pet.equipped },
+    placed: decor ? decor.serialize().map((d) => d.id) : [],
+    accessories: shop.accessories,
+    decor: shop.decor,
+  }
+}
+
+function onShop(kind, id) {
+  const item =
+    kind === 'accessory'
+      ? shop.accessories.find((a) => a.id === id)
+      : shop.decor.find((d) => d.id === id)
+  if (!item) return
+
+  if (kind === 'accessory') {
+    if (!pet.owns(id)) {
+      if (!pet.buy(id, item.price)) {
+        ui.toast('Yeterli balık paran yok 🐟')
+        return
+      }
+      pet.toggleEquip(id, item.slot)
+      ui.toast(item.name + ' alındı ve takıldı!')
+    } else {
+      const on = pet.toggleEquip(id, item.slot)
+      ui.toast(on ? item.name + ' takıldı' : item.name + ' çıkarıldı')
+    }
+  } else if (!pet.owns(id)) {
+    if (!pet.buy(id, item.price)) {
+      ui.toast('Yeterli balık paran yok 🐟')
+      return
+    }
+    decor.add(id, undefined, W)
+    ui.toast(item.name + ' masaüstüne kondu!')
+  } else {
+    const placed = decor.toggle(id, W)
+    ui.toast(placed ? item.name + ' yerleştirildi' : item.name + ' kaldırıldı')
+  }
+
+  pet.decor = decor.serialize()
+  ui.refreshShop()
+  save()
+}
+
+// ---------------------------------------------------------------- oyunlar
+function startGame(kind) {
+  if (game.active) return
+  ui.hideMenu()
+  ui.hideShop()
+  game.start(kind, W, H)
+  ui.toast(kind === 'fish' ? 'Zıplayan balıklara tıkla! 🐟' : 'Köpükleri patlat! 🫧')
+}
+
+function endGame({ score }) {
+  const coins = score
+  pet.addCoins(coins)
+  pet.addXp(Math.min(20, score))
+  pet.needs.happiness = Math.min(100, pet.needs.happiness + Math.min(15, score))
+  pet.needs.love = Math.min(100, pet.needs.love + Math.min(5, Math.floor(score / 3)))
+  ui.toast(`Skor ${score} · +${coins} 🐟`)
+  save()
 }
 
 function onAction(id) {
@@ -320,6 +430,7 @@ function onSetting(key, value) {
 
 function save() {
   if (!pet) return
+  if (decor) pet.decor = decor.serialize()
   api.writeSave(pet.serialize())
 }
 
@@ -338,6 +449,8 @@ function loop(now) {
   pet.update(dt, W, H)
   ai.update(dt)
   if (friends) friends.update(dt, W, H, pet)
+  if (decor) decor.update(dt, W, H)
+  if (game) game.update(dt, W, H)
 
   // arkadaş yakınsa fok sevinir
   if (friends && friends.nearPet(pet) && !pet.busy && !pet.sleeping && Math.random() < dt * 0.12) {
@@ -370,12 +483,14 @@ async function boot() {
   anim = new Animator(atlas, '/assets/seal/')
   await anim.load()
 
-  const [ballImg, fishImg] = await Promise.all([
+  const [ballImg, fishImg, bubbleImg] = await Promise.all([
     loadImage('/assets/props/ball.png'),
     loadImage('/assets/props/fish.png'),
+    loadImage('/assets/props/bubble.png'),
   ])
   images.ball = ballImg
   images.fish = fishImg
+  images.bubble = bubbleImg
 
   // arkadaşlar
   const friendAtlas = await (await fetch('/assets/friends/friends.json')).json()
@@ -388,17 +503,38 @@ async function boot() {
   )
   friends = new Friends(friendAtlas, Object.fromEntries(friendImgs))
 
+  // mağaza: aksesuar + süs görselleri
+  shop = await (await fetch('/assets/shop.json')).json()
+  const accImgs = {}
+  await Promise.all(
+    shop.accessories.map(async (a) => {
+      accImgs[a.id] = await loadImage('/assets/accessories/' + a.id + '.png')
+    }),
+  )
+  const decImgs = {}
+  await Promise.all(
+    shop.decor.map(async (d) => {
+      decImgs[d.id] = await loadImage('/assets/decor/' + d.id + '.png')
+    }),
+  )
+  decor = new DecorManager(decImgs)
+
   pet = new Pet(anim, sfx)
+  pet.setAccessoryImages(accImgs)
   const saved = await api.loadSave()
   if (saved) pet.apply(saved)
 
   pet.x = Math.max(0, Math.min(W - SPRITE * pet.scale, pet.x))
   pet.y = H - 4 - FEET * pet.scale
 
+  decor.apply(pet.decor, W)
+
   world.pet = pet
   ai = new AI(pet, world)
 
-  ui = new UI({ onAction, onSetting })
+  game = new MiniGame({ images, sfx, onEnd: endGame })
+
+  ui = new UI({ onAction, onSetting, onShop })
   ui.setSettings({ scale: pet.scale, top: true, sound: true, follow: false })
 
   spawnBall()
@@ -416,7 +552,40 @@ async function boot() {
   window.addEventListener('dblclick', (e) => {
     if (pet.hitTest(e.clientX, e.clientY)) pet.celebrate()
   })
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (game && game.active) game.finish()
+      else if (ui) {
+        ui.hideMenu()
+        ui.hideShop()
+        ui.hideSettings()
+      }
+    }
+  })
   window.addEventListener('beforeunload', save)
+
+  // geliştirme kancası (DevTools konsolundan durumu görmek için)
+  window.__seal = {
+    get pet() {
+      return pet
+    },
+    get decor() {
+      return decor
+    },
+    get game() {
+      return game
+    },
+    get ui() {
+      return ui
+    },
+    get world() {
+      return world
+    },
+    get interactive() {
+      return interactive
+    },
+    run: runCommand,
+  }
 
   console.log(
     '[boot]',
