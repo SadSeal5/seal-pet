@@ -22,6 +22,18 @@ let cursorTimer = null
 let ambientTimer = null
 let dnd = false
 
+// Tek örnek: iki kez açılırsa iki fok iki ayrı kayıt dosyasına yazar.
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    if (!win || win.isDestroyed()) return
+    if (!win.isVisible()) win.showInactive()
+    win.focus()
+  })
+}
+
 // Şeffaf pencereler bazı GPU sürücülerinde boş çiziliyor; yazılım kompozisyonu güvenli yol.
 // app.disableHardwareAcceleration()
 
@@ -33,19 +45,42 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 function readSave() {
-  try {
-    return JSON.parse(fs.readFileSync(savePath(), 'utf8'))
-  } catch {
-    return null
+  // Bozuk ana dosya varsa son sağlam yedeğe düş.
+  for (const file of [savePath(), savePath() + '.bak']) {
+    try {
+      return JSON.parse(fs.readFileSync(file, 'utf8'))
+    } catch {
+      // sıradaki adayı dene
+    }
   }
+  return null
 }
 
 function writeSave(data) {
+  if (!data || typeof data !== 'object') return false
   try {
-    fs.mkdirSync(path.dirname(savePath()), { recursive: true })
-    fs.writeFileSync(savePath(), JSON.stringify(data, null, 2))
+    const dir = path.dirname(savePath())
+    fs.mkdirSync(dir, { recursive: true })
+
+    const json = JSON.stringify(data, null, 2)
+    const tmp = savePath() + '.tmp'
+
+    // Önce geçici dosyaya yaz, sonra atomik olarak yerine taşı.
+    fs.writeFileSync(tmp, json)
+
+    try {
+      // Yalnızca sağlam kaydı yedekle; bozuk dosya yedeği de bozmasın.
+      JSON.parse(fs.readFileSync(savePath(), 'utf8'))
+      fs.copyFileSync(savePath(), savePath() + '.bak')
+    } catch {
+      // ilk kayıtta veya bozuk kayıtta yedek oluşturma
+    }
+
+    fs.renameSync(tmp, savePath())
+    return true
   } catch (err) {
     console.error('save failed', err)
+    return false
   }
 }
 
@@ -158,6 +193,7 @@ function buildTray() {
     { type: 'separator' },
     { label: '🐟 Besle', click: () => send('feed') },
     { label: '❤️ Sev', click: () => send('pet') },
+    { label: '🛁 Yıka', click: () => send('wash') },
     { label: '⚽ Oyna', click: () => send('play') },
     { label: '🐧 Arkadaş çağır', click: () => send('friend') },
     { label: '😴 Uyut / Uyandır', click: () => send('sleep') },
@@ -199,8 +235,17 @@ function buildTray() {
     {
       label: 'Çıkış',
       click: () => {
-        quitting = true
-        app.quit()
+        if (win && !win.isDestroyed()) {
+          // Önce renderer'a kaydetme şansı ver; 1.5 sn içinde kapanmazsa zorla çık.
+          win.webContents.send('cmd', 'quit')
+          setTimeout(() => {
+            quitting = true
+            app.quit()
+          }, 1500)
+        } else {
+          quitting = true
+          app.quit()
+        }
       },
     },
   ])
@@ -221,12 +266,21 @@ const MIME = {
 }
 
 app.whenReady().then(() => {
-  protocol.handle('app', async (request) => {
-    const url = new URL(request.url)
-    const rel = decodeURIComponent(url.pathname).replace(/^\/+/, '')
-    const target = path.join(ROOT, rel)
+  if (!gotTheLock) return
 
-    if (!target.startsWith(ROOT)) {
+  protocol.handle('app', async (request) => {
+    let rel
+    try {
+      rel = decodeURIComponent(new URL(request.url).pathname).replace(/^\/+/, '')
+    } catch {
+      return new Response('bad request', { status: 400 })
+    }
+
+    if (rel.includes('\0')) return new Response('forbidden', { status: 403 })
+
+    const target = path.resolve(ROOT, rel)
+    const relative = path.relative(ROOT, target)
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
       return new Response('forbidden', { status: 403 })
     }
 
@@ -262,6 +316,7 @@ app.on('before-quit', () => {
 
 ipcMain.handle('save:load', () => readSave())
 ipcMain.on('save:write', (_e, data) => writeSave(data))
+ipcMain.handle('save:flush', (_e, data) => writeSave(data))
 
 ipcMain.on('win:interactive', (_e, on) => {
   if (win && !win.isDestroyed()) win.setIgnoreMouseEvents(!on, { forward: true })

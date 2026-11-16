@@ -35,32 +35,39 @@ export class Animator {
   }
 
   play(name, { restart = false, onEnd = null } = {}) {
-    if (!this.atlas[name]) return
+    if (!this.atlas[name]) return false
     if (this.name === name && !restart) {
       if (onEnd) this.onEnd = onEnd
-      return
+      return true
     }
     this.name = name
     this.frame = 0
     this.t = 0
     this.ended = false
     this.onEnd = onEnd
+    return true
   }
 
   update(dt) {
     const clip = this.clip
     if (!clip || this.ended) return
 
-    const frameTime = 1 / clip.fps
+    const frames = Math.max(1, Math.floor(clip.frames) || 1)
+    const fps = clip.fps > 0 ? clip.fps : 1
+    const frameTime = 1 / fps
     this.t += dt
 
-    while (this.t >= frameTime) {
+    // Pencere askıya alınıp dt birikirse sonsuz döngüye girmeyi engelle.
+    let steps = 0
+    while (this.t >= frameTime && steps++ < 600) {
       this.t -= frameTime
-      if (this.frame + 1 >= clip.frames) {
-        if (clip.loop) {
+      if (this.frame + 1 >= frames) {
+        // Döngülü klip bile olsa onEnd verilmişse bir tur sonra bitir.
+        // (ör. balance_ball tek seferlik numara olarak oynatılıyor)
+        if (clip.loop && !this.onEnd) {
           this.frame = 0
         } else {
-          this.frame = clip.frames - 1
+          this.frame = frames - 1
           this.ended = true
           const cb = this.onEnd
           this.onEnd = null
@@ -71,6 +78,7 @@ export class Animator {
         this.frame++
       }
     }
+    if (this.frame >= frames) this.frame = frames - 1
   }
 
   draw(ctx, x, y, scale, flip) {

@@ -27,9 +27,14 @@ export class Pet {
     this.thrown = false
     this.maxY = 0
 
+    // ödül cooldown'ları: tıklama/besleme ile sonsuz para kasmayı engeller
+    this.petCooldown = 0
+    this.washCooldown = 0
+
     this.needs = { hunger: 82, happiness: 78, energy: 85, clean: 92, love: 8 }
     this.xp = 0
     this.name = 'Buz'
+    this.settings = { top: true, sound: true, follow: false }
 
     // ekonomi + dolap
     this.coins = 30
@@ -55,6 +60,7 @@ export class Pet {
 
   // ------------------------------------------------------------- animasyon
   play(name, { once = false, force = false } = {}) {
+    if (!this.anim.atlas[name]) name = 'idle'
     if (this.state === name && !force) return
     this.state = name
     this.busy = once
@@ -82,8 +88,19 @@ export class Pet {
     const maxX = W - SPRITE * s
     this.maxY = maxY
 
+    this.petCooldown = Math.max(0, this.petCooldown - dt)
+    this.washCooldown = Math.max(0, this.washCooldown - dt)
+
     if (!this.dragging) {
-      const walking = this.targetX != null && this.y >= maxY - 1 && !this.sleeping
+      // hedef her karede ekran sınırına çekilir; aksi hâlde duvara yapışıp
+      // sonsuza kadar "slide" durumunda kalabiliyordu
+      if (this.targetX != null) {
+        if (!Number.isFinite(this.targetX)) this.targetX = null
+        else this.targetX = clamp(this.targetX, 0, maxX)
+      }
+
+      const walking =
+        this.targetX != null && !this.busy && this.y >= maxY - 1 && !this.sleeping
 
       if (walking) {
         const dx = this.targetX - this.x
@@ -98,8 +115,17 @@ export class Pet {
           }
         } else {
           this.facing = dx > 0 ? 1 : -1
-          this.x += Math.sign(dx) * WALK_SPEED * dt
-          this.play('slide')
+          this.x = clamp(this.x + Math.sign(dx) * WALK_SPEED * dt, 0, maxX)
+
+          // hedefe ulaşıldıysa (veya duvara dayandıysa) hedefi temizle
+          if ((dx > 0 && this.x >= maxX) || (dx < 0 && this.x <= 0)) {
+            this.targetX = null
+            this.vx = 0
+            this.chaseBall = false
+            this.play(this.baseClip(), { force: true })
+          } else {
+            this.play('slide')
+          }
         }
       } else {
         this.vy += GRAVITY * dt
@@ -166,6 +192,8 @@ export class Pet {
       n.hunger = Math.max(0, n.hunger - dt * 0.04)
       n.happiness = Math.max(0, n.happiness - dt * 0.022)
       n.clean = Math.max(0, n.clean - dt * 0.008)
+      // kirli fok mutsuzlaşır (temizlik istatistiği artık davranışa bağlı)
+      if (n.clean < 25) n.happiness = Math.max(0, n.happiness - dt * 0.02)
     }
     if (!this.sleeping && n.energy <= 0.5) this.sleep()
   }
@@ -175,8 +203,12 @@ export class Pet {
     if (this.sleeping) this.wake()
     this.needs.happiness = Math.min(100, this.needs.happiness + 9)
     this.needs.love = Math.min(100, this.needs.love + 3)
-    this.addXp(2)
-    this.addCoins(1)
+    // aynı anda seri tıklayarak para/XP kasmayı engelle
+    if (this.petCooldown <= 0) {
+      this.petCooldown = 2
+      this.addXp(2)
+      this.addCoins(1)
+    }
     this.play('hearts', { once: true })
     this.sfx.happy()
   }
@@ -198,10 +230,24 @@ export class Pet {
     this.sfx.happy()
   }
 
+  /** Yıkama: temizliği doldurur. */
+  wash() {
+    if (this.sleeping) this.wake()
+    if (this.washCooldown > 0) return false
+    this.washCooldown = 20
+    this.needs.clean = 100
+    this.needs.happiness = Math.min(100, this.needs.happiness + 3)
+    this.addXp(1)
+    this.play('bubble', { once: true })
+    this.sfx.pop()
+    return true
+  }
+
   sleep() {
     if (this.sleeping) return
     this.sleeping = true
     this.targetX = null
+    this.chaseBall = false
     this.vx = 0
     this.play('sleep', { force: true })
   }
@@ -256,6 +302,8 @@ export class Pet {
     this.grabDX = mx - this.x
     this.grabDY = my - this.y
     this.targetX = null
+    this.chaseBall = false
+    this.thrown = false
     this.vx = 0
     this.vy = 0
     if (this.sleeping) this.wake()
@@ -329,37 +377,60 @@ export class Pet {
       owned: [...this.owned],
       equipped: { ...this.equipped },
       decor: this.decor.map((d) => ({ id: d.id, x: Math.round(d.x) })),
+      settings: { ...this.settings },
       lastSeen: Date.now(),
     }
   }
 
   apply(data) {
-    if (!data) return
-    if (data.name) this.name = data.name
-    if (data.needs) {
+    if (!data || typeof data !== 'object') return
+    if (typeof data.name === 'string' && data.name.trim()) this.name = data.name.trim().slice(0, 24)
+    if (data.needs && typeof data.needs === 'object') {
       for (const k of Object.keys(this.needs)) {
-        if (typeof data.needs[k] === 'number') this.needs[k] = data.needs[k]
+        const v = data.needs[k]
+        if (typeof v === 'number' && Number.isFinite(v)) this.needs[k] = clamp(v, 0, 100)
       }
     }
-    if (typeof data.xp === 'number') this.xp = data.xp
-    if (typeof data.scale === 'number') this.scale = clamp(data.scale, 2, 5)
-    if (typeof data.x === 'number') this.x = data.x
-    if (typeof data.coins === 'number') this.coins = Math.max(0, data.coins)
-    if (Array.isArray(data.owned)) this.owned = data.owned.filter((v) => typeof v === 'string')
+    if (typeof data.xp === 'number' && Number.isFinite(data.xp)) {
+      this.xp = Math.max(0, Math.floor(data.xp))
+    }
+    if (typeof data.scale === 'number' && Number.isFinite(data.scale)) {
+      this.scale = clamp(Math.round(data.scale), 2, 5)
+    }
+    if (typeof data.x === 'number' && Number.isFinite(data.x)) this.x = data.x
+    if (typeof data.coins === 'number' && Number.isFinite(data.coins)) {
+      this.coins = Math.max(0, Math.floor(data.coins))
+    }
+    if (Array.isArray(data.owned)) {
+      this.owned = [...new Set(data.owned.filter((v) => typeof v === 'string'))]
+    }
     if (data.equipped && typeof data.equipped === 'object') {
       this.equipped = {}
       for (const [slot, id] of Object.entries(data.equipped)) {
         if (typeof id === 'string' && this.owns(id)) this.equipped[slot] = id
       }
     }
+    if (data.settings && typeof data.settings === 'object') {
+      for (const k of Object.keys(this.settings)) {
+        if (typeof data.settings[k] === 'boolean') this.settings[k] = data.settings[k]
+      }
+    }
     if (Array.isArray(data.decor)) {
       this.decor = data.decor
         .filter((d) => d && typeof d.id === 'string')
-        .map((d) => ({ id: d.id, x: Number(d.x) || 0 }))
+        .map((d) => {
+          const x = Number(d.x)
+          return { id: d.id, x: Number.isFinite(x) ? x : 0 }
+        })
     }
 
     // çevrimdışı geçen süre için hafif azalma (en fazla 1 saat)
-    const elapsed = clamp((Date.now() - (data.lastSeen || Date.now())) / 1000, 0, 3600)
+    const lastSeen = Number(data.lastSeen)
+    const elapsed = clamp(
+      (Date.now() - (Number.isFinite(lastSeen) ? lastSeen : Date.now())) / 1000,
+      0,
+      3600,
+    )
     const n = this.needs
     n.hunger = Math.max(0, n.hunger - elapsed * 0.02)
     n.energy = Math.max(0, n.energy - elapsed * 0.02)

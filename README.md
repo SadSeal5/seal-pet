@@ -6,10 +6,10 @@ Windows masaüstünde yaşayan, pixel art bir fok. Şeffaf pencere, click-throug
 
 ## İndirme
 
-Hazır sürüm: **[Fok 0.2.0](https://github.com/SadSeal5/seal-pet/releases/latest)**
+Hazır sürüm: **[Fok 0.2.1](https://github.com/SadSeal5/seal-pet/releases/latest)**
 
-- `Fok Setup 0.2.0.exe` — NSIS installer (masaüstü + başlangıç menüsü kısayolu)
-- `Fok 0.2.0.exe` — portable, kurulum gerektirmez
+- `Fok Setup 0.2.1.exe` — NSIS installer (masaüstü + başlangıç menüsü kısayolu)
+- `Fok 0.2.1.exe` — portable, kurulum gerektirmez
 
 İmzasız olduğu için SmartScreen "bilinmeyen yayıncı" uyarısı verebilir: **Daha fazla bilgi → Yine de çalıştır**.
 
@@ -22,10 +22,14 @@ npm start
 
 İlk çalıştırmada Electron ikilisi iner (~100 MB), sonrası hızlı.
 
+```bash
+npm test     # pet/animatör davranış testleri (Node test runner)
+```
+
 ## Kurulum (installer)
 
 ```bash
-npm run dist     # dist/Fok Setup 0.2.0.exe + portable exe
+npm run dist     # dist/Fok Setup 0.2.1.exe + portable exe
 npm run pack     # yalnızca paketlenmiş klasör (dist/win-unpacked)
 ```
 
@@ -36,10 +40,10 @@ Paketlenmiş sürümde tray menüsündeki **Başlangıçta aç** seçeneği de e
 
 | Etkileşim | Sonuç |
 |---|---|
-| Sol tık (fokun üstüne) | Sevme — kalpler, mutluluk +9, +1 🐟 |
+| Sol tık (fokun üstüne) | Sevme — kalpler, mutluluk +9, 2 saniyede bir +1 🐟 |
 | Sürükle | Havada asılı kalır; bırakınca düşer, fırlatınca yuvarlanır |
 | Çift tık | Kutlama spini |
-| Sağ tık | Menü: Besle / Sev / Oyna / Arkadaş çağır / Uyut / Mağaza / Oyunlar / Durum / Ayarlar / Gizle / Çıkış |
+| Sağ tık | Menü: Besle / Sev / Yıka / Oyna / Arkadaş çağır / Uyut / Mağaza / Oyunlar / Durum / Ayarlar / Gizle / Çıkış |
 | Topu sürükle | Fizikli top; fok peşinden koşar, burnunda dengeler |
 | Balığı sürükle | Fok yaklaşıp yer |
 | Süsü sürükle | Süsü masaüstünde istediğin yere taşı (konum kaydedilir) |
@@ -51,15 +55,15 @@ Masaüstünün geri kalanı normal çalışır: pencere yalnızca imleç fokun/t
 ## Arkadaşlar
 
 Ara sıra masaüstüne bir arkadaş gelir: 🐧 penguen, 🦦 su samuru, 🐦 martı, 🦀 yengeç, 🐟 balık.
-Kenardan girer, fokun yanına yürür, 10–20 saniye takılır, arada foka doğru zıplar, sonra gider.
+Kenardan girer, fokun yanına yürür, yaklaşık 1 dakika takılır (fok yakınındaysa daha uzun), arada foka doğru zıplar, sonra gider.
 Aynı anda en fazla 2 arkadaş olur. Sağ tık menüsünden "🐧 Arkadaş çağır" ile hemen çağırabilirsiniz.
 
 ## Mağaza ve balık parası
 
 Balık parası (🐟) kazanma yolları:
 
-- Foku sevmek: +1
-- Balık yedirmek: +2
+- Foku sevmek: +1 (2 saniyede bir)
+- Balık yedirmek: +2 (besleme bekleme süresi vardır)
 - Mini oyun skoru: skor kadar
 
 Mağaza sağ tık menüsünden veya tray'den açılır. İki bölüm vardır:
@@ -72,7 +76,13 @@ Fok sola döndüğünde aksesuarlar da onunla birlikte aynalanır.
 Satın alınca masaüstüne konur, sürükleyerek taşınabilir, mağazadan "Kaldır" ile kaldırılabilir.
 Parti flaması ekranın üstünde gerili bir flama olarak çizilir.
 
-Tüm alımlar, takılı aksesuarlar ve süs konumları `save.json` içinde saklanır.
+Tüm alımlar, takılı aksesuarlar, süs konumları ve ayarlar `save.json` içinde saklanır.
+Kayıt önce geçici dosyaya yazılıp atomik olarak taşınır; bozuk kayıt durumunda `save.json.bak` yedeği kullanılır.
+
+## Bakım
+
+Temizlik azaldıkça fok mutsuzlaşır. Sağ tık menüsünden veya tray'den **🛁 Yıka** ile temizliği
+100'e çıkarabilirsin (20 saniye bekleme süresi vardır).
 
 ## Mini oyunlar
 
@@ -130,6 +140,7 @@ src/world/friends.js   ziyaretçi arkadaşlar
 src/world/decor.js     süs yerleşimi, sürükleme, kayıt
 src/world/minigame.js  balık yakala / köpük patlat
 src/ui/ui.js           menü, durum, ayarlar, mağaza, toast
+tests/pet.test.mjs     animatör, hedef sınırları, kayıt doğrulama, ekonomi testleri
 ```
 
 Kayıt: `%APPDATA%/seal-pet/save.json`
@@ -140,6 +151,8 @@ Kayıt: `%APPDATA%/seal-pet/save.json`
 - **Hep üstte**
 - **Ses**
 - **Fareyi takip et** — fok ara sıra imlece doğru yürür
+
+Ayarlar kayda yazılır ve uygulama yeniden açıldığında geri yüklenir.
 
 ## Yol haritası
 

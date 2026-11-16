@@ -91,6 +91,7 @@ export class AI {
       case 'slide': {
         const margin = 48 * p.scale
         const span = Math.max(1, w.W - margin * 2)
+        p.chaseBall = false
         p.targetX = Math.round(margin + Math.random() * span)
         break
       }
@@ -112,6 +113,7 @@ export class AI {
         break
 
       case 'balance':
+        p.chaseBall = false
         p.play('balance_ball', { once: true })
         break
 
@@ -143,6 +145,7 @@ export class AI {
         if (w.mouse.x < 0) break
         const dir = w.mouse.x > p.centerX ? 1 : -1
         const target = w.mouse.x - 40 * p.scale * dir
+        p.chaseBall = false
         p.targetX = Math.round(Math.max(0, Math.min(w.W - 48 * p.scale, target)))
         break
       }

@@ -104,6 +104,8 @@ export class DecorManager {
     this.groundY = H - 4
     for (const d of this.list) {
       if (d.dragging) continue
+      // pencere yeniden boyutlandığında süsler ekran dışında kalmasın
+      d.x = Math.max(0, Math.min(Math.max(0, W - d.w), d.x))
       d.phase += dt
       d.bob = d.id === 'bunting' ? 0 : Math.sin(d.phase * 1.2) * 0.6
     }

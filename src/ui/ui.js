@@ -1,6 +1,7 @@
 const MENU_ITEMS = [
   { id: 'feed', label: '🐟  Besle' },
   { id: 'pet', label: '❤️  Sev' },
+  { id: 'wash', label: '🛁  Yıka' },
   { id: 'play', label: '⚽  Oyna' },
   { id: 'friend', label: '🐧  Arkadaş çağır' },
   { id: 'sleep', label: '😴  Uyut' },
@@ -93,7 +94,8 @@ export class UI {
     document.getElementById('stats-level').textContent = 'Sv.' + pet.level
 
     const set = (id, value) => {
-      document.getElementById(id).style.width = Math.round(value) + '%'
+      const pct = Math.max(0, Math.min(100, Number(value) || 0))
+      document.getElementById(id).style.width = Math.round(pct) + '%'
     }
     set('bar-hunger', pet.needs.hunger)
     set('bar-happiness', pet.needs.happiness)
@@ -140,7 +142,9 @@ export class UI {
     this.shopState = null
   }
 
-  refreshShop() {
+  /** Mağaza açıkken güncel durumla yeniden çiz. */
+  refreshShop(state) {
+    if (state) this.shopState = state
     if (this.shopState) this.renderShop()
   }
 

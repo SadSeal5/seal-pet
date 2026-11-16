@@ -546,7 +546,7 @@ CLIPS = {
     "dizzy": (clip_dizzy, 8, False),
     "spin": (clip_spin, 14, False),
     "clap": (clip_clap, 12, False),
-    "balance_ball": (clip_balance_ball, 8, True),
+    "balance_ball": (clip_balance_ball, 8, False),
     "bubble": (clip_bubble, 10, False),
     "celebrate": (clip_celebrate, 12, False),
 }

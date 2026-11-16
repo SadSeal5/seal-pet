@@ -28,10 +28,11 @@ class Strip {
 
   update(dt) {
     this.t += dt
-    const step = 1 / this.fps
+    const step = 1 / (this.fps > 0 ? this.fps : 1)
+    const frames = Math.max(1, this.frames)
     while (this.t >= step) {
       this.t -= step
-      this.frame = (this.frame + 1) % this.frames
+      this.frame = (this.frame + 1) % frames
     }
   }
 
@@ -89,9 +90,10 @@ export class Friend {
     const near = pet ? pet.centerX : W / 2
     const gap = 130 + Math.random() * 90
     const side = this.dir >= 0 ? 1 : -1
+    const maxX = Math.max(16, W - this.w - 16)
     let tx = near + side * gap - this.w / 2
-    if (tx < 16 || tx > W - this.w - 16) tx = near - side * gap - this.w / 2
-    return clamp(tx, 16, W - this.w - 16)
+    if (tx < 16 || tx > maxX) tx = near - side * gap - this.w / 2
+    return clamp(tx, 16, maxX)
   }
 
   update(dt, W, H, pet) {
@@ -156,7 +158,6 @@ export class Friend {
     if (Math.abs(dx) > 2) {
       this.dir = dx > 0 ? 1 : -1
       this.x += this.dir * this.cfg.speed * dt
-      if (this.state === 'enter' || this.state === 'play') this.state = this.state
     }
   }
 
@@ -262,7 +263,7 @@ export class Friends {
           if (Math.abs(tx + f.w / 2 - petC) < 120) {
             tx = petC - side * 120 - f.w / 2
           }
-          f.targetX = clamp(tx, 16, W - f.w - 16)
+          f.targetX = clamp(tx, 16, Math.max(16, W - f.w - 16))
         }
       }
     }

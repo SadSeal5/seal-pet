@@ -3,6 +3,8 @@ const { contextBridge, ipcRenderer } = require('electron')
 contextBridge.exposeInMainWorld('petAPI', {
   loadSave: () => ipcRenderer.invoke('save:load'),
   writeSave: (data) => ipcRenderer.send('save:write', data),
+  // Çıkıştan önce kaydın tamamlandığını doğrulamak için (promise döner)
+  flushSave: (data) => ipcRenderer.invoke('save:flush', data),
   setInteractive: (on) => ipcRenderer.send('win:interactive', on),
   hide: () => ipcRenderer.send('win:hide'),
   quit: () => ipcRenderer.send('app:quit'),

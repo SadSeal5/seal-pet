@@ -41,6 +41,7 @@ let shop = null
 let drag = null
 let interactive = false
 let saveTimer = 0
+let feedCooldown = 0
 
 const sfx = new Sfx()
 const images = {}
@@ -116,6 +117,8 @@ function handleFish() {
     return
   }
   if (!f.grounded) return
+
+  if (pet.sleeping) pet.wake()
 
   const fx = f.x + f.w / 2
   const dist = Math.abs(pet.centerX - fx)
@@ -259,6 +262,23 @@ function onDown(e) {
   }
 }
 
+/** Sürükleme penceresi dışında biterse takılı kalmasın. */
+function cancelDrag() {
+  if (!drag) return
+  if (drag.kind === 'pet') {
+    pet.dragging = false
+    pet.vx = 0
+    pet.vy = 0
+    pet.play(pet.baseClip(), { force: true })
+  } else if (drag.kind === 'decor') {
+    drag.item.dragging = false
+  } else {
+    drag.toy.dragging = false
+  }
+  drag = null
+  updateInteractive()
+}
+
 function onUp() {
   if (!drag) return
 
@@ -298,10 +318,30 @@ function onContextMenu(e) {
 function runCommand(cmd) {
   switch (cmd) {
     case 'feed':
+      if (feedCooldown > 0) {
+        if (ui) ui.toast('Buz az önce yedi, biraz bekle 🐟')
+        break
+      }
+      if (pet.needs.hunger > 92) {
+        if (ui) ui.toast('Buz tok, sonra besle 🐟')
+        break
+      }
+      if (world.fish) {
+        if (ui) ui.toast('Yerde zaten bir balık var 🐟')
+        break
+      }
+      feedCooldown = 12
       spawnFish()
       break
     case 'pet':
       pet.petIt()
+      break
+    case 'wash':
+      if (pet.wash()) {
+        if (ui) ui.toast('Buz yıkandı, pırıl pırıl! 🫧')
+      } else if (ui) {
+        ui.toast('Buz yakında yıkandı 🫧')
+      }
       break
     case 'play':
       throwBall()
@@ -327,6 +367,10 @@ function runCommand(cmd) {
       break
     case 'settings':
       ui.showSettings()
+      break
+    case 'quit':
+      // tray'den gelen çıkışta da önce kaydı yaz
+      onAction('quit')
       break
   }
 }
@@ -375,7 +419,7 @@ function onShop(kind, id) {
   }
 
   pet.decor = decor.serialize()
-  ui.refreshShop()
+  ui.refreshShop(shopState())
   save()
 }
 
@@ -400,12 +444,13 @@ function endGame({ score }) {
 
 function onAction(id) {
   if (id === 'hide') {
+    save()
     api.hide()
     return
   }
   if (id === 'quit') {
-    save()
-    api.quit()
+    // Kayıt tamamlanmadan çıkma: IPC sırası garanti olsun diye invoke kullan.
+    saveNow().finally(() => api.quit())
     return
   }
   runCommand(id)
@@ -413,17 +458,21 @@ function onAction(id) {
 
 function onSetting(key, value) {
   if (key === 'scale') {
+    const next = Math.max(2, Math.min(5, Math.round(Number(value) || 3)))
     const ratio = pet.centerX / Math.max(1, W)
-    pet.scale = value
-    if (world.ball) world.ball.scale = Math.min(4, value)
+    pet.scale = next
+    if (world.ball) world.ball.scale = Math.min(4, next)
     pet.x = Math.max(0, Math.min(W - SPRITE * pet.scale, ratio * W - SPRITE * pet.scale * 0.5))
     pet.y = Math.min(pet.y, H - 4 - FEET * pet.scale)
   } else if (key === 'top') {
-    api.setAlwaysOnTop(value)
+    pet.settings.top = !!value
+    api.setAlwaysOnTop(pet.settings.top)
   } else if (key === 'sound') {
-    sfx.enabled = value
+    pet.settings.sound = !!value
+    sfx.enabled = pet.settings.sound
   } else if (key === 'follow') {
-    world.follow = value
+    pet.settings.follow = !!value
+    world.follow = pet.settings.follow
   }
   save()
 }
@@ -432,6 +481,13 @@ function save() {
   if (!pet) return
   if (decor) pet.decor = decor.serialize()
   api.writeSave(pet.serialize())
+}
+
+/** Çıkıştan önce kaydın diske yazılmasını bekler. */
+function saveNow() {
+  if (!pet) return Promise.resolve(false)
+  if (decor) pet.decor = decor.serialize()
+  return api.flushSave(pet.serialize())
 }
 
 // ---------------------------------------------------------------- döngü
@@ -464,6 +520,8 @@ function loop(now) {
 
   updateInteractive()
   render()
+
+  feedCooldown = Math.max(0, feedCooldown - dt)
 
   saveTimer += dt
   if (saveTimer > 15) {
@@ -524,6 +582,11 @@ async function boot() {
   const saved = await api.loadSave()
   if (saved) pet.apply(saved)
 
+  // ayarları kayıttan geri yükle
+  sfx.enabled = pet.settings.sound
+  world.follow = pet.settings.follow
+  api.setAlwaysOnTop(pet.settings.top)
+
   pet.x = Math.max(0, Math.min(W - SPRITE * pet.scale, pet.x))
   pet.y = H - 4 - FEET * pet.scale
 
@@ -535,7 +598,12 @@ async function boot() {
   game = new MiniGame({ images, sfx, onEnd: endGame })
 
   ui = new UI({ onAction, onSetting, onShop })
-  ui.setSettings({ scale: pet.scale, top: true, sound: true, follow: false })
+  ui.setSettings({
+    scale: pet.scale,
+    top: pet.settings.top,
+    sound: pet.settings.sound,
+    follow: pet.settings.follow,
+  })
 
   spawnBall()
 
@@ -549,6 +617,8 @@ async function boot() {
   window.addEventListener('mousedown', onDown)
   window.addEventListener('mouseup', onUp)
   window.addEventListener('contextmenu', onContextMenu)
+  window.addEventListener('blur', cancelDrag)
+  document.addEventListener('mouseleave', cancelDrag)
   window.addEventListener('dblclick', (e) => {
     if (pet.hitTest(e.clientX, e.clientY)) pet.celebrate()
   })
@@ -592,12 +662,15 @@ async function boot() {
     JSON.stringify({ W, H, scale: pet.scale, x: pet.x, y: pet.y, clips: Object.keys(anim.images).length }),
   )
 
-  setTimeout(() => {
-    const d = ctx.getImageData(0, 0, canvas.width, canvas.height).data
-    let n = 0
-    for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++
-    console.log('[pixels]', JSON.stringify({ dpr: window.devicePixelRatio, opaque: n, frames: frameCount }))
-  }, 2500)
+  // ağır getImageData taraması yalnızca hata ayıklama açıkken çalışsın
+  if (window.__sealDebug) {
+    setTimeout(() => {
+      const d = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+      let n = 0
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++
+      console.log('[pixels]', JSON.stringify({ dpr: window.devicePixelRatio, opaque: n, frames: frameCount }))
+    }, 2500)
+  }
 
   requestAnimationFrame(loop)
 }

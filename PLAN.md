@@ -175,7 +175,7 @@ Sırt: küçük sırt çantası, deniz kabuğu
 | 17 | `dizzy` | 4 | 8 | ✓ |
 | 18 | `spin` | 6 | 14 | ✗ |
 | 19 | `clap` | 4 | 12 | ✗ |
-| 20 | `balance_ball` | 4 | 8 | ✓ |
+| 20 | `balance_ball` | 4 | 8 | ✗ |
 | 21 | `bubble` | 6 | 10 | ✗ |
 | 22 | `celebrate` | 8 | 12 | ✗ |
 

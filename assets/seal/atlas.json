@@ -165,7 +165,7 @@
     "frameH": 48,
     "frames": 4,
     "fps": 8,
-    "loop": true
+    "loop": false
   },
   "bubble": {
     "file": "bubble.png",
