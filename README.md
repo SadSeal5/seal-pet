@@ -6,10 +6,10 @@ Windows masaüstünde yaşayan, pixel art bir fok. Şeffaf pencere, click-throug
 
 ## İndirme
 
-Hazır sürüm: **[Fok 0.2.1](https://github.com/SadSeal5/seal-pet/releases/latest)**
+Hazır sürüm: **[Fok 0.2.2](https://github.com/SadSeal5/seal-pet/releases/latest)**
 
-- `Fok Setup 0.2.1.exe` — NSIS installer (masaüstü + başlangıç menüsü kısayolu)
-- `Fok 0.2.1.exe` — portable, kurulum gerektirmez
+- `Fok Setup 0.2.2.exe` — NSIS installer (masaüstü + başlangıç menüsü kısayolu)
+- `Fok 0.2.2.exe` — portable, kurulum gerektirmez
 
 İmzasız olduğu için SmartScreen "bilinmeyen yayıncı" uyarısı verebilir: **Daha fazla bilgi → Yine de çalıştır**.
 
@@ -29,7 +29,7 @@ npm test     # pet/animatör davranış testleri (Node test runner)
 ## Kurulum (installer)
 
 ```bash
-npm run dist     # dist/Fok Setup 0.2.1.exe + portable exe
+npm run dist     # dist/Fok Setup 0.2.2.exe + portable exe
 npm run pack     # yalnızca paketlenmiş klasör (dist/win-unpacked)
 ```
 
@@ -83,6 +83,18 @@ Kayıt önce geçici dosyaya yazılıp atomik olarak taşınır; bozuk kayıt du
 
 Temizlik azaldıkça fok mutsuzlaşır. Sağ tık menüsünden veya tray'den **🛁 Yıka** ile temizliği
 100'e çıkarabilirsin (20 saniye bekleme süresi vardır).
+
+## İhtiyaçlar
+
+| İhtiyaç | Uyanıkken azalma | Yaklaşık süre |
+|---|---|---|
+| Tokluk | 1 puan / 25 sn | ~42 dk |
+| Mutluluk | 1 puan / 45 sn | ~76 dk |
+| Enerji | 1 puan / 20 sn | ~33 dk |
+| Temizlik | 1 puan / 2 dk | ~3,5 saat |
+
+Uyurken enerji dolar, tokluk daha yavaş azalır. Uygulama kapalıyken geçen süre en fazla
+1 saat için hafifçe düşülür. Temizlik 25'in altına inince fok ekstra mutsuzlaşır.
 
 ## Mini oyunlar
 

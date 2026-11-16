@@ -95,10 +95,10 @@
 ### 4.3 İhtiyaçlar (needs)
 | Stat | Azalma | Etki |
 |---|---|---|
-| Tokluk (hunger) | 6 dk'da 1 | düşükse balık ister, yavaşlar |
-| Mutluluk (happiness) | ilgilenilmezse 10 dk'da 1 | düşükse üzgün, oyun reddeder |
-| Enerji (energy) | uyanıkken 4 dk'da 1 | 0 ise uyur |
-| Temizlik (cleanliness) | 30 dk'da 1 | düşükse tüy döker, yıkanmak ister |
+| Tokluk (hunger) | uyanıkken 25 sn'de 1 | düşükse balık ister, yavaşlar |
+| Mutluluk (happiness) | ilgilenilmezse ~45 sn'de 1 | düşükse üzgün, oyun reddeder |
+| Enerji (energy) | uyanıkken 20 sn'de 1 | 0 ise uyur |
+| Temizlik (cleanliness) | ~2 dk'da 1 | düşükse mutsuzlaşır, yıkanmak ister |
 | Sevgi (affection) | artar | seviye/XP açar |
 
 > Denge: 1 gerçek saat ≈ 1 "fok günü". Bakım zorunlu değil — ihmal edilirse üzülür ama ölmez.

@@ -1,6 +1,6 @@
 {
   "name": "seal-pet",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Pixel art masaüstü fok pet",
   "main": "electron/main.js",
   "scripts": {
@@ -15,8 +15,13 @@
   "author": "Sad_Seal",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^45.3.2",
+    "electron": "^45.3.3",
     "electron-builder": "^26.0.12"
+  },
+  "overrides": {
+    "minimatch@^5.0.0": "^11.0.8",
+    "minimatch@^9.0.0": "^11.0.8",
+    "minimatch@^10.0.0": "^11.0.8"
   },
   "build": {
     "appId": "com.sadseal.sealpet",

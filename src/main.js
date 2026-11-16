@@ -221,7 +221,7 @@ function onDown(e) {
     return
   }
 
-  if (ui) ui.hideMenu()
+  if (ui) ui.hidePanels()
 
   const deco = decor && decor.hitTest(x, y, H)
   if (deco) {
@@ -411,8 +411,8 @@ function onShop(kind, id) {
       ui.toast('Yeterli balık paran yok 🐟')
       return
     }
-    decor.add(id, undefined, W)
-    ui.toast(item.name + ' masaüstüne kondu!')
+    const placed = decor.add(id, undefined, W)
+    ui.toast(placed ? item.name + ' masaüstüne kondu!' : item.name + ' alındı')
   } else {
     const placed = decor.toggle(id, W)
     ui.toast(placed ? item.name + ' yerleştirildi' : item.name + ' kaldırıldı')
@@ -426,19 +426,19 @@ function onShop(kind, id) {
 // ---------------------------------------------------------------- oyunlar
 function startGame(kind) {
   if (game.active) return
-  ui.hideMenu()
-  ui.hideShop()
+  ui.hidePanels()
   game.start(kind, W, H)
   ui.toast(kind === 'fish' ? 'Zıplayan balıklara tıkla! 🐟' : 'Köpükleri patlat! 🫧')
 }
 
-function endGame({ score }) {
+function endGame({ score, bestCombo = 0 }) {
   const coins = score
   pet.addCoins(coins)
   pet.addXp(Math.min(20, score))
   pet.needs.happiness = Math.min(100, pet.needs.happiness + Math.min(15, score))
   pet.needs.love = Math.min(100, pet.needs.love + Math.min(5, Math.floor(score / 3)))
-  ui.toast(`Skor ${score} · +${coins} 🐟`)
+  const combo = bestCombo > 1 ? ` · kombo x${bestCombo}` : ''
+  ui.toast(`Skor ${score}${combo} · +${coins} 🐟`)
   save()
 }
 

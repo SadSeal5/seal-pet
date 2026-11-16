@@ -28,7 +28,6 @@ export class MiniGame {
     this.spawnTimer = 0
     this.W = 0
     this.H = 0
-    this.flash = 0
   }
 
   start(kind, W, H) {
@@ -44,7 +43,6 @@ export class MiniGame {
     this.spawnTimer = 0.3
     this.W = W
     this.H = H
-    this.flash = 0.5
     this.sfx.blip()
   }
 
@@ -107,7 +105,6 @@ export class MiniGame {
     if (!this.active) return
 
     this.time -= dt
-    this.flash = Math.max(0, this.flash - dt)
     if (this.time <= 0) {
       this.finish()
       return

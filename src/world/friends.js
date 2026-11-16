@@ -212,6 +212,7 @@ export class Friends {
   }
 
   spawn(kind, W, H) {
+    if (!KINDS[kind]) return null
     if (this.list.length >= this.maxAlive) return null
     if (!this.images[`${kind}_walk`]) return null
     const dir = Math.random() < 0.5 ? 1 : -1

@@ -48,6 +48,9 @@ export class UI {
 
   // ------------------------------------------------------------- menü
   openMenu(x, y, pet) {
+    this.hideShop()
+    this.hideSettings()
+    this.hideStats()
     this.menuEl.innerHTML = ''
 
     for (const item of MENU_ITEMS) {
@@ -90,6 +93,9 @@ export class UI {
 
   // ------------------------------------------------------------- durum
   showStats(pet) {
+    this.hideMenu()
+    this.hideShop()
+    this.hideSettings()
     document.getElementById('stats-name').textContent = pet.name
     document.getElementById('stats-level').textContent = 'Sv.' + pet.level
 
@@ -118,11 +124,15 @@ export class UI {
   }
 
   hideStats() {
+    clearTimeout(this.statsTimer)
     this.statsEl.classList.add('hidden')
   }
 
   // ------------------------------------------------------------- mağaza
   showShop(state) {
+    this.hideMenu()
+    this.hideSettings()
+    this.hideStats()
     this.shopState = state
     this.renderShop()
 
@@ -264,6 +274,9 @@ export class UI {
   }
 
   showSettings() {
+    this.hideMenu()
+    this.hideShop()
+    this.hideStats()
     this.settingsEl.style.left = '-9999px'
     this.settingsEl.style.top = '-9999px'
     this.settingsEl.classList.remove('hidden')
@@ -275,6 +288,14 @@ export class UI {
 
   hideSettings() {
     this.settingsEl.classList.add('hidden')
+  }
+
+  /** Dışarı tıklanınca tüm panelleri kapat. */
+  hidePanels() {
+    this.hideMenu()
+    this.hideStats()
+    this.hideShop()
+    this.hideSettings()
   }
 
   // ------------------------------------------------------------- hit test
